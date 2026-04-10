@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>VVV2 設定判別アプリ</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #141b34;
+      --card2: #1a2345;
+      --line: #2b3768;
+      --text: #eef2ff;
+      --muted: #a9b4df;
+      --good: #25c281;
+      --warn: #f3b340;
+      --bad: #ff6b6b;
+      --accent: #7c9cff;
+      --accent2: #b388ff;
+      --shadow: 0 12px 32px rgba(0,0,0,.28);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: linear-gradient(180deg, #08101c 0%, #0b1020 100%); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif; }
+    body { min-height: 100vh; }
+    .wrap { width: min(1100px, calc(100% - 20px)); margin: 0 auto; padding: 16px 0 80px; }
+    .hero {
+      background: linear-gradient(135deg, rgba(124,156,255,.18), rgba(179,136,255,.12));
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: var(--shadow);
+      border-radius: 24px;
+      padding: 18px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(6px);
+    }
+    h1 { margin: 0 0 8px; font-size: clamp(24px, 5vw, 34px); }
+    .sub { color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .badge {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    .grid { display: grid; gap: 14px; }
+    .grid.top { grid-template-columns: repeat(12, 1fr); }
+    .card {
+      background: linear-gradient(180deg, rgba(21,27,52,.95), rgba(16,22,44,.95));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .summary { grid-column: span 12; }
+    .main { grid-column: span 12; }
+    @media (min-width: 960px) {
+      .summary { grid-column: span 5; }
+      .main { grid-column: span 7; }
+    }
+
+    h2 { margin: 0 0 12px; font-size: 19px; }
+    h3 { margin: 0 0 10px; font-size: 15px; }
+    .muted { color: var(--muted); }
+    .tiny { font-size: 12px; color: var(--muted); }
+    .stack { display: grid; gap: 12px; }
+    .two { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
+    .three { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 560px) {
+      .two, .three { grid-template-columns: 1fr; }
+    }
+
+    .kpi-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
+    .kpi {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .kpi .label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .kpi .value { font-size: 22px; font-weight: 700; }
+
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    input, select, textarea, button {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #0d1430;
+      color: var(--text);
+      padding: 12px 13px;
+      font-size: 16px;
+    }
+    textarea { min-height: 88px; resize: vertical; }
+    button {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+    button.secondary {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      color: var(--text);
+      box-shadow: none;
+    }
+    button.danger { background: linear-gradient(135deg, #ff6b6b, #ff8c66); }
+
+    .actions { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 700px) { .actions { grid-template-columns: 1fr; } }
+
+    .status-box {
+      border-radius: 18px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+    }
+    .status-title { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .status-value { font-size: 28px; font-weight: 800; letter-spacing: .03em; }
+    .good { color: var(--good); }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+
+    .bars { display: grid; gap: 10px; }
+    .bar-row { display: grid; gap: 8px; }
+    .bar-top { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
+    .bar-track {
+      height: 12px;
+      background: rgba(255,255,255,.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width .2s ease;
+    }
+
+    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+      font-size: 12px;
+    }
+
+    .log {
+      display: grid;
+      gap: 8px;
+      max-height: 340px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+    .log-item {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 14px;
+      padding: 10px 12px;
+      display: grid;
+      gap: 6px;
+    }
+    .log-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      font-size: 13px;
+    }
+    .log-note { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .log-score { font-weight: 700; }
+
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.14), rgba(255,255,255,0));
+      margin: 8px 0;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      line-height: 1.7;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .mini-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .prob-table {
+      display: grid;
+      gap: 8px;
+    }
+    .prob-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 14px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>VVV2 設定判別アプリ</h1>
+      <div class="sub">
+        Lパチスロ 革命機ヴァルヴレイヴ2向けの簡易判別ツールです。<br>
+        単純なカウンターではなく、示唆の強弱に応じてスコア化し、設定1 / 2 / 4 / 5 / 6の相対評価を出します。
+      </div>
+      <div class="badge-row">
+        <div class="badge">スマホ対応</div>
+        <div class="badge">GitHub Pages向け</div>
+        <div class="badge">localStorage保存</div>
+        <div class="badge">JSON書き出し / 読み込み</div>
+      </div>
+    </section>
+
+    <div class="grid top">
+      <section class="card summary">
+        <h2>判定サマリー</h2>
+        <div class="stack">
+          <div class="status-box">
+            <div class="status-title">現在の評価</div>
+            <div id="overallStatus" class="status-value">様子見</div>
+            <div id="overallReason" class="tiny" style="margin-top:8px; line-height:1.7;">強い確定示唆待ち。弱い示唆だけではまだ押し切れません。</div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi">
+              <div class="label">総スコア</div>
+              <div id="totalScore" class="value">0</div>
+            </div>
+            <div class="kpi">
+              <div class="label">記録件数</div>
+              <div id="eventCount" class="value">0</div>
+            </div>
+          </div>
+
+          <div class="mini-card">
+            <h3>推定バランス</h3>
+            <div class="bars" id="bars"></div>
+          </div>
+
+          <div class="mini-card">
+            <h3>確定・強示唆メモ</h3>
+            <div class="pill-row" id="strongHints"></div>
+          </div>
+
+          <div class="mini-card">
+            <h3>続行ライン</h3>
+            <div class="prob-table">
+              <div class="prob-row"><span>押せる</span><strong id="pushLine">設定4以上寄り</strong></div>
+              <div class="prob-row"><span>かなり押せる</span><strong id="strongPushLine">設定5以上寄り</strong></div>
+              <div class="prob-row"><span>即粘り級</span><strong id="lockLine">設定6濃厚級</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card main">
+        <h2>入力</h2>
+        <div class="stack">
+          <div class="two">
+            <div>
+              <label for="playG">現在の通常ゲーム数</label>
+              <input id="playG" type="number" inputmode="numeric" min="0" placeholder="例: 3200" />
+            </div>
+            <div>
+              <label for="memo">メモ</label>
+              <input id="memo" type="text" placeholder="例: 夕方 / イベ日 / 並び候補" />
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <div class="three">
+            <div>
+              <label for="eventType">記録する項目</label>
+              <select id="eventType">
+                <option value="end">CZ・ボーナス終了画面</option>
+                <option value="start">AT開始時のゾロ目ゲーム数</option>
+                <option value="round">ATラウンド開始画面</option>
+                <option value="bar">BAR狙え経由の結果</option>
+                <option value="sub">サブモニターの機体</option>
+                <option value="bonus">初当り内訳</option>
+                <option value="custom">手動メモ</option>
+              </select>
+            </div>
+            <div>
+              <label for="eventValue">内容</label>
+              <select id="eventValue"></select>
+            </div>
+            <div>
+              <label for="eventQty">件数</label>
+              <input id="eventQty" type="number" inputmode="numeric" min="1" value="1" />
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="addBtn" type="button">記録する</button>
+            <button id="saveBtn" type="button" class="secondary">保存し直す</button>
+            <button id="resetBtn" type="button" class="danger">全リセット</button>
+          </div>
+
+          <div class="two">
+            <button id="exportBtn" type="button" class="secondary">JSON書き出し</button>
+            <label style="margin:0;">
+              <input id="importFile" type="file" accept="application/json" style="display:none;" />
+              <button id="importBtn" type="button" class="secondary">JSON読み込み</button>
+            </label>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top:14px;">
+      <h2>記録一覧</h2>
+      <div id="log" class="log"></div>
+      <div class="footer-note">
+        このアプリは実戦用の簡易判別です。小役カウントは不要で、示唆・確定系を中心に評価します。<br>
+        画面系やゾロ目は強く、サブモニターや弱示唆は補助扱いにしています。
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'vvv2-setting-app-v1';
+
+    const EVENT_OPTIONS = {
+      end: [
+        { value: 'white', label: '白（デフォルト）' },
+        { value: 'blue1', label: '青①（奇数＆高設定示唆弱）' },
+        { value: 'blue2', label: '青②（偶数示唆）' },
+        { value: 'red1', label: '赤①（高設定示唆弱）' },
+        { value: 'red2', label: '赤②（高設定示唆強）' },
+        { value: 'purple', label: '紫（設定2以上濃厚）' },
+        { value: 'silver', label: '銀（設定4以上濃厚）' },
+        { value: 'gold', label: '金（設定6濃厚）' }
+      ],
+      start: [
+        { value: '22', label: '+22G（設定2以上濃厚）' },
+        { value: '44', label: '+44G（設定4以上濃厚）' },
+        { value: '66', label: '+66G（設定6濃厚）' }
+      ],
+      round: [
+        { value: 'green', label: '緑背景（デフォルト寄り）' },
+        { value: 'marie', label: 'マリエ水着（高設定示唆弱）' },
+        { value: 'rune', label: 'ルーン漏れ1号機（高設定示唆強）' },
+        { value: 'saki', label: '200年後のサキ（設定4以上濃厚）' },
+        { value: 'lieselotte', label: 'リーゼロッテ（設定6濃厚）' }
+      ],
+      bar: [
+        { value: 'direct', label: 'BAR狙え → AT直撃' },
+        { value: 'rd', label: 'BAR狙え → ルーンドライブ' },
+        { value: 'miss', label: 'BAR狙え発生なし / 未確認' }
+      ],
+      sub: [
+        { value: 'buffet_unmanned', label: 'バッフェ（無人タイプ）' },
+        { value: 'buffet_manned', label: 'バッフェ（有人タイプ）' },
+        { value: 'fire', label: 'PFネーム火ノ輪' },
+        { value: 'human', label: 'PFネーム火人' },
+        { value: 'play', label: 'PFネーム火遊' },
+        { value: 'marie_awake', label: '搭乗者 野火マリエ' },
+        { value: 'vvv3', label: 'ヴァルヴレイヴ3号機' },
+        { value: 'vvv5', label: 'ヴァルヴレイヴ5号機' }
+      ],
+      bonus: [
+        { value: 'kakumei', label: '初当りが革命ボーナス / AT直撃' },
+        { value: 'cz', label: '初当りがCZ経由' }
+      ],
+      custom: [
+        { value: 'manual_plus', label: '手動でプラス加点' },
+        { value: 'manual_minus', label: '手動でマイナス加点' },
+        { value: 'manual_note', label: 'メモのみ' }
+      ]
+    };
+
+    const SCORE_MAP = {
+      end: {
+        white:   { scores: {1: 0, 2: 0, 4: 0, 5: 0, 6: 0}, note: 'デフォルト。材料としては弱い。' },
+        blue1:   { scores: {1: -2, 2: -1, 4: 0, 5: 3, 6: 0}, note: '奇数寄り + 高設定弱。設定5を少し押し上げ。' },
+        blue2:   { scores: {1: -1, 2: 2, 4: 2, 5: -1, 6: 2}, note: '偶数寄り。2 / 4 / 6を少し優遇。' },
+        red1:    { scores: {1: -1, 2: 0, 4: 2, 5: 2, 6: 2}, note: '高設定弱。4以上を少し押し上げ。' },
+        red2:    { scores: {1: -3, 2: -1, 4: 4, 5: 4, 6: 4}, note: '高設定強。4以上を大きく押し上げ。' },
+        purple:  { scores: {1: -9999, 2: 8, 4: 8, 5: 8, 6: 8}, note: '設定2以上濃厚。設定1否定。', hint: '紫出現 = 設定2以上濃厚' },
+        silver:  { scores: {1: -9999, 2: -9999, 4: 12, 5: 12, 6: 12}, note: '設定4以上濃厚。', hint: '銀出現 = 設定4以上濃厚' },
+        gold:    { scores: {1: -9999, 2: -9999, 4: -9999, 5: -9999, 6: 20}, note: '設定6濃厚。', hint: '金出現 = 設定6濃厚' }
+      },
+      start: {
+        '22':    { scores: {1: -9999, 2: 6, 4: 6, 5: 6, 6: 6}, note: '+22Gは設定2以上濃厚。', hint: '+22G = 設定2以上濃厚' },
+        '44':    { scores: {1: -9999, 2: -9999, 4: 10, 5: 10, 6: 10}, note: '+44Gは設定4以上濃厚。', hint: '+44G = 設定4以上濃厚' },
+        '66':    { scores: {1: -9999, 2: -9999, 4: -9999, 5: -9999, 6: 18}, note: '+66Gは設定6濃厚。', hint: '+66G = 設定6濃厚' }
+      },
+      round: {
+        green:      { scores: {1: 0, 2: 0, 4: 0, 5: 0, 6: 0}, note: 'デフォルト寄り。材料は弱い。' },
+        marie:      { scores: {1: -1, 2: -1, 4: 2, 5: 2, 6: 2}, note: '高設定示唆弱。' },
+        rune:       { scores: {1: -3, 2: -2, 4: 4, 5: 4, 6: 4}, note: '高設定示唆強。' },
+        saki:       { scores: {1: -9999, 2: -9999, 4: 10, 5: 10, 6: 10}, note: '設定4以上濃厚。', hint: '200年後のサキ = 設定4以上濃厚' },
+        lieselotte: { scores: {1: -9999, 2: -9999, 4: -9999, 5: -9999, 6: 18}, note: '設定6濃厚。', hint: 'リーゼロッテ = 設定6濃厚' }
+      },
+      bar: {
+        direct: { scores: {1: -2, 2: -1, 4: 1, 5: 2, 6: 3}, note: 'BAR経由のAT直撃は高設定ほど優遇。' },
+        rd:     { scores: {1: 1, 2: 1, 4: 0, 5: -1, 6: -2}, note: 'BAR経由でルーンドライブ止まりは低設定側に寄りやすい。' },
+        miss:   { scores: {1: 0, 2: 0, 4: 0, 5: 0, 6: 0}, note: '未確認。スコア変動なし。' }
+      },
+      sub: {
+        buffet_unmanned: { scores: {1: 1, 2: -1, 4: -1, 5: 1, 6: -1}, note: '無人タイプは奇数寄り。補助要素。' },
+        buffet_manned:   { scores: {1: -1, 2: 1, 4: 1, 5: -1, 6: 1}, note: '有人タイプは偶数寄り。補助要素。' },
+        fire:            { scores: {1: 0, 2: 0, 4: 1, 5: 1, 6: 1}, note: '約50%が通常B以上。設定というより状態寄り。' },
+        human:           { scores: {1: 0, 2: 0, 4: 1, 5: 1, 6: 1}, note: '2周期以内のCZ当選濃厚。設定判断には軽め。' },
+        play:            { scores: {1: 0, 2: 0, 4: 1, 5: 1, 6: 1}, note: '通常B以上濃厚。設定判断には軽め。' },
+        marie_awake:     { scores: {1: 0, 2: 0, 4: 1, 5: 1, 6: 1}, note: '革命ボーナス / マリエ覚醒期待。状態寄り。' },
+        vvv3:            { scores: {1: 0, 2: 0, 4: 1, 5: 1, 6: 1}, note: 'CZ当選期待の示唆。設定判断には軽め。' },
+        vvv5:            { scores: {1: 0, 2: 0, 4: 1, 5: 1, 6: 1}, note: '5周期以内のCZ濃厚。設定判断には軽め。' }
+      },
+      bonus: {
+        kakumei: { scores: {1: -1, 2: 0, 4: 1, 5: 1, 6: 2}, note: '高設定ほど初当り時の革命ボーナス/AT直撃比率が高い。' },
+        cz:      { scores: {1: 1, 2: 0, 4: 0, 5: -1, 6: -1}, note: 'CZ寄りは相対的に弱め。' }
+      },
+      custom: {
+        manual_plus:  { scores: {1: -1, 2: 0, 4: 1, 5: 1, 6: 1}, note: '任意加点。強挙動メモ用。' },
+        manual_minus: { scores: {1: 1, 2: 0, 4: -1, 5: -1, 6: -1}, note: '任意減点。弱挙動メモ用。' },
+        manual_note:  { scores: {1: 0, 2: 0, 4: 0, 5: 0, 6: 0}, note: 'メモのみ。スコア変動なし。' }
+      }
+    };
+
+    const LABELS = { 1: '設定1', 2: '設定2', 4: '設定4', 5: '設定5', 6: '設定6' };
+    const state = loadState();
+
+    const playG = document.getElementById('playG');
+    const memo = document.getElementById('memo');
+    const eventType = document.getElementById('eventType');
+    const eventValue = document.getElementById('eventValue');
+    const eventQty = document.getElementById('eventQty');
+    const addBtn = document.getElementById('addBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const importFile = document.getElementById('importFile');
+
+    const totalScore = document.getElementById('totalScore');
+    const eventCount = document.getElementById('eventCount');
+    const overallStatus = document.getElementById('overallStatus');
+    const overallReason = document.getElementById('overallReason');
+    const strongHints = document.getElementById('strongHints');
+    const bars = document.getElementById('bars');
+    const log = document.getElementById('log');
+    const pushLine = document.getElementById('pushLine');
+    const strongPushLine = document.getElementById('strongPushLine');
+    const lockLine = document.getElementById('lockLine');
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { playG: '', memo: '', events: [] };
+        const parsed = JSON.parse(raw);
+        return {
+          playG: parsed.playG ?? '',
+          memo: parsed.memo ?? '',
+          events: Array.isArray(parsed.events) ? parsed.events : []
+        };
+      } catch {
+        return { playG: '', memo: '', events: [] };
+      }
+    }
+
+    function saveState() {
+      state.playG = playG.value;
+      state.memo = memo.value;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function populateEventValues() {
+      const options = EVENT_OPTIONS[eventType.value] || [];
+      eventValue.innerHTML = '';
+      for (const opt of options) {
+        const el = document.createElement('option');
+        el.value = opt.value;
+        el.textContent = opt.label;
+        eventValue.appendChild(el);
+      }
+    }
+
+    function normalizeScores(rawScores) {
+      const entries = Object.entries(rawScores).map(([k, v]) => [Number(k), v]);
+      const valid = entries.filter(([, v]) => v > -9999);
+      if (!valid.length) {
+        return { 1: 0, 2: 0, 4: 0, 5: 0, 6: 100 };
+      }
+      const shifted = valid.map(([k, v]) => [k, Math.exp(Math.max(-30, Math.min(30, v / 5)))]);
+      const sum = shifted.reduce((acc, [, v]) => acc + v, 0);
+      const out = { 1: 0, 2: 0, 4: 0, 5: 0, 6: 0 };
+      for (const [k, v] of shifted) out[k] = Math.round((v / sum) * 1000) / 10;
+      return out;
+    }
+
+    function compute() {
+      const scores = { 1: 0, 2: 0, 4: 0, 5: 0, 6: 0 };
+      const hints = [];
+
+      for (const row of state.events) {
+        const def = SCORE_MAP[row.type]?.[row.value];
+        if (!def) continue;
+        const qty = Number(row.qty || 1);
+        for (const setting of [1,2,4,5,6]) {
+          const add = Number(def.scores[setting] || 0) * qty;
+          if (def.scores[setting] <= -9999) {
+            scores[setting] = -9999;
+          } else if (scores[setting] > -9999) {
+            scores[setting] += add;
+          }
+        }
+        if (def.hint) hints.push(def.hint);
+      }
+
+      const normalized = normalizeScores(scores);
+      const total = Object.values(scores).filter(v => v > -9999).reduce((a, b) => a + b, 0);
+      const best = Object.entries(normalized).sort((a, b) => b[1] - a[1])[0];
+      const bestSetting = Number(best?.[0] || 1);
+      const bestRate = Number(best?.[1] || 0);
+      const prob46 = normalized[4] + normalized[5] + normalized[6];
+      const prob56 = normalized[5] + normalized[6];
+
+      return { scores, normalized, hints, total, bestSetting, bestRate, prob46, prob56 };
+    }
+
+    function statusText(result) {
+      const guaranteed6 = result.scores[6] > -9999 && result.scores[1] <= -9999 && result.scores[2] <= -9999 && result.scores[4] <= -9999 && result.scores[5] <= -9999;
+      const guaranteed4up = result.scores[4] > -9999 && result.scores[1] <= -9999 && result.scores[2] <= -9999;
+
+      if (guaranteed6 || result.normalized[6] >= 90) {
+        return {
+          label: 'かなり強い',
+          cls: 'good',
+          reason: '設定6濃厚級。確定系、またはそれに近い材料が揃っています。'
+        };
+      }
+      if (guaranteed4up || result.prob46 >= 75) {
+        return {
+          label: '続行寄り',
+          cls: 'good',
+          reason: '設定4以上の期待が高め。弱い示唆だけでなく、強めの材料が乗っています。'
+        };
+      }
+      if (result.prob46 >= 45) {
+        return {
+          label: '様子見',
+          cls: 'warn',
+          reason: 'まだ押せる余地はあるけれど、決め手不足。追加示唆待ちです。'
+        };
+      }
+      return {
+        label: '慎重',
+        cls: 'bad',
+        reason: '今の材料だけだと強く押しにくいです。確定示唆や強示唆が欲しいところ。'
+      };
+    }
+
+    function prettyType(type) {
+      return ({
+        end: '終了画面',
+        start: 'AT開始ゾロ目',
+        round: 'ラウンド開始画面',
+        bar: 'BAR狙え',
+        sub: 'サブモニター',
+        bonus: '初当り内訳',
+        custom: '手動メモ'
+      })[type] || type;
+    }
+
+    function prettyValue(type, value) {
+      const found = (EVENT_OPTIONS[type] || []).find(v => v.value === value);
+      return found ? found.label : value;
+    }
+
+    function render() {
+      const result = compute();
+      const status = statusText(result);
+
+      totalScore.textContent = String(Math.round(result.total));
+      eventCount.textContent = String(state.events.length);
+      overallStatus.textContent = status.label;
+      overallStatus.className = `status-value ${status.cls}`;
+      overallReason.textContent = status.reason;
+
+      pushLine.textContent = result.prob46 >= 70 ? 'かなり近い' : result.prob46 >= 50 ? 'やや近い' : 'まだ弱い';
+      strongPushLine.textContent = result.prob56 >= 45 ? '十分ある' : result.prob56 >= 25 ? '少しある' : 'まだ薄い';
+      lockLine.textContent = result.normalized[6] >= 60 ? '見えてきた' : result.normalized[6] >= 30 ? '少し意識' : 'まだ遠い';
+
+      const uniqueHints = [...new Set(result.hints)];
+      strongHints.innerHTML = uniqueHints.length
+        ? uniqueHints.map(h => `<div class="pill">${escapeHtml(h)}</div>`).join('')
+        : '<div class="pill">まだ強い確定示唆なし</div>';
+
+      bars.innerHTML = '';
+      for (const setting of [1,2,4,5,6]) {
+        const row = document.createElement('div');
+        row.className = 'bar-row';
+        const rate = result.normalized[setting] || 0;
+        row.innerHTML = `
+          <div class="bar-top">
+            <span>${LABELS[setting]}</span>
+            <strong>${rate.toFixed(1)}%</strong>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.max(0, Math.min(100, rate))}%"></div></div>
+        `;
+        bars.appendChild(row);
+      }
+
+      log.innerHTML = '';
+      if (!state.events.length) {
+        log.innerHTML = '<div class="log-item"><div class="log-note">まだ記録がありません。終了画面やAT開始のゾロ目から入れると使いやすいです。</div></div>';
+      } else {
+        state.events.forEach((row, idx) => {
+          const def = SCORE_MAP[row.type]?.[row.value];
+          const scorePreview = def ? Object.entries(def.scores)
+            .filter(([, v]) => v > 0)
+            .map(([k, v]) => `${LABELS[k]} +${v}`)
+            .join(' / ') : 'スコアなし';
+          const el = document.createElement('div');
+          el.className = 'log-item';
+          el.innerHTML = `
+            <div class="log-head">
+              <div><strong>${prettyType(row.type)}</strong>：${escapeHtml(prettyValue(row.type, row.value))} × ${row.qty}</div>
+              <div class="log-score">#${idx + 1}</div>
+            </div>
+            <div class="log-note">${escapeHtml(def?.note || 'メモ')} ${row.note ? ' / メモ: ' + escapeHtml(row.note) : ''}</div>
+            <div class="tiny">${escapeHtml(scorePreview)}</div>
+          `;
+          log.appendChild(el);
+        });
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function addEvent() {
+      const qty = Math.max(1, Number(eventQty.value || 1));
+      state.events.push({
+        type: eventType.value,
+        value: eventValue.value,
+        qty,
+        note: memo.value.trim(),
+        playG: playG.value,
+        ts: new Date().toISOString()
+      });
+      saveState();
+      render();
+    }
+
+    function exportJson() {
+      saveState();
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'vvv2-setting-data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importJson(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          state.playG = parsed.playG ?? '';
+          state.memo = parsed.memo ?? '';
+          state.events = Array.isArray(parsed.events) ? parsed.events : [];
+          playG.value = state.playG;
+          memo.value = state.memo;
+          saveState();
+          render();
+          alert('読み込みました。');
+        } catch {
+          alert('JSONの読み込みに失敗しました。');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    eventType.addEventListener('change', populateEventValues);
+    addBtn.addEventListener('click', addEvent);
+    saveBtn.addEventListener('click', () => { saveState(); render(); alert('保存しました。'); });
+    resetBtn.addEventListener('click', () => {
+      if (!confirm('全データをリセットしますか？')) return;
+      state.playG = '';
+      state.memo = '';
+      state.events = [];
+      playG.value = '';
+      memo.value = '';
+      localStorage.removeItem(STORAGE_KEY);
+      render();
+    });
+    exportBtn.addEventListener('click', exportJson);
+    importBtn.addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) importJson(file);
+      e.target.value = '';
+    });
+    playG.addEventListener('input', saveState);
+    memo.addEventListener('input', saveState);
+
+    populateEventValues();
+    playG.value = state.playG;
+    memo.value = state.memo;
+    render();
+  </script>
+</body>
+</html>
