@@ -299,6 +299,8 @@
                 <option value="bar">BAR狙え経由の結果</option>
                 <option value="sub">サブモニターの機体</option>
                 <option value="bonus">初当り内訳</option>
+                <option value="specialFlow">周期ポイント挙動</option>
+                <option value="special">特殊テーブル選択</option>
                 <option value="custom">手動メモ</option>
               </select>
             </div>
@@ -334,7 +336,7 @@
       <div id="log" class="log"></div>
       <div class="footer-note">
         このアプリは実戦用の簡易判別です。小役カウントは不要で、示唆・確定系を中心に評価します。<br>
-        画面系やゾロ目は強く、サブモニターや弱示唆は補助扱いにしています。
+        画面系やゾロ目は強く、サブモニターや弱示唆は補助扱いにしています。特殊テーブル選択は独立した強要素として、通常の弱示唆より重く加点します。さらに、400pt以内の浅い周期到達 / 500pt超えの深い周期も入力できるようにして、特殊テーブルの入りやすさを間接的に見られるようにしています。
       </div>
     </section>
   </div>
@@ -384,6 +386,14 @@
         { value: 'kakumei', label: '初当りが革命ボーナス / AT直撃' },
         { value: 'cz', label: '初当りがCZ経由' }
       ],
+      specialFlow: [
+        { value: 'under400', label: '400pt以内で周期到達' },
+        { value: 'over500', label: '500pt超えで周期到達' }
+      ],
+      special: [
+        { value: 'selected', label: '特殊テーブルが選択された' },
+        { value: 'not_selected', label: '特殊テーブルは未確認 / 非選択' }
+      ],
       custom: [
         { value: 'manual_plus', label: '手動でプラス加点' },
         { value: 'manual_minus', label: '手動でマイナス加点' },
@@ -432,6 +442,14 @@
       bonus: {
         kakumei: { scores: {1: -1, 2: 0, 4: 1, 5: 1, 6: 2}, note: '高設定ほど初当り時の革命ボーナス/AT直撃比率が高い。' },
         cz:      { scores: {1: 1, 2: 0, 4: 0, 5: -1, 6: -1}, note: 'CZ寄りは相対的に弱め。' }
+      },
+      specialFlow: {
+        under400: { scores: {1: -2, 2: 0, 4: 2, 5: 4, 6: 6}, note: '400pt以内の周期到達。特殊テーブルの可能性があり、高設定ほどプラス評価。', hint: '400pt以内到達 = 浅い周期でプラス要素' },
+        over500:  { scores: {1: 2, 2: 1, 4: -1, 5: -3, 6: -5}, note: '500pt超えは特殊テーブル否定寄り。回数が増えるほど低設定寄りに見る。', hint: '500pt超え = 深い周期でマイナス要素' }
+      },
+      special: {
+        selected:     { scores: {1: -6, 2: -2, 4: 5, 5: 8, 6: 12}, note: '特殊テーブル選択は高設定ほどかなり強い要素として扱う。通常の弱示唆より重く加点。', hint: '特殊テーブル選択 = 高設定期待アップ' },
+        not_selected: { scores: {1: 0, 2: 0, 4: 0, 5: 0, 6: 0}, note: '未確認 / 非選択。単独では減点しない。' }
       },
       custom: {
         manual_plus:  { scores: {1: -1, 2: 0, 4: 1, 5: 1, 6: 1}, note: '任意加点。強挙動メモ用。' },
@@ -581,6 +599,8 @@
         bar: 'BAR狙え',
         sub: 'サブモニター',
         bonus: '初当り内訳',
+        specialFlow: '周期ポイント挙動',
+        special: '特殊テーブル',
         custom: '手動メモ'
       })[type] || type;
     }
